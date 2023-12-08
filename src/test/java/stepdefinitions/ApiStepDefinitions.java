@@ -1,19 +1,23 @@
 package stepdefinitions;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import pojos.RoomPojo;
 
 import static baseurls.MedunnaBaseUrl.spec;
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
-import static stepdefinitions.RoomCreationStepDefinitions.roomIdStr;
-import static stepdefinitions.RoomCreationStepDefinitions.roomNumber;
+import static stepdefinitions.RoomCreationStepDefinitions.*;
 
 public class ApiStepDefinitions {
 
     Response response;
+    RoomPojo expectedData;
     @Given("Admin send Get request for all Rooms")
     public void admin_send_get_request_for_all_rooms() {
         // Set Url
@@ -63,5 +67,43 @@ public class ApiStepDefinitions {
         assertEquals(true,actualRoomStatus);
         assertEquals(210.00+"",actualRoomPrice+"");
         assertEquals("Batch 179",actualRoomDescription);
+    }
+
+    @Given("Admin send Get request for created room by its Id")
+    public void admin_send_get_request_for_created_room_by_its_ıd() {
+       //Set the url
+       spec.pathParams("first" ,"api","second","rooms",
+               "third",Integer.valueOf(roomIdStr));
+
+       //Set the Expected Data
+        expectedData = new RoomPojo(roomNumber,"SUITE",true,roomPrice,roomDescription);
+
+
+        //Sent Request
+        response = given(spec).when().get("{first}/{second}/{third}");
+        response.prettyPrint();
+
+
+
+    }
+    @Then("validates body for created room")
+    public void validates_body_for_created_room() throws JsonProcessingException {
+
+        //first way to de-seriliaze
+       RoomPojo actualData = new ObjectMapper(). readValue(response.asString(), RoomPojo.class);
+
+
+       //Second Way
+        RoomPojo actualData2 = response.as(RoomPojo.class);
+
+        //third way
+       RoomPojo actualData3 = new Gson().fromJson(response.asString(), RoomPojo.class);
+
+        assertEquals(expectedData.getRoomNumber(),actualData.getRoomNumber());
+        assertEquals(expectedData.getRoomType(),actualData.getRoomType());
+        assertEquals(expectedData.getDescription(),actualData.getDescription());
+        assertEquals(expectedData.isStatus(),actualData.isStatus());
+        assertEquals(expectedData.getPrice()+".0",actualData.getPrice()+"");
+
     }
 }
