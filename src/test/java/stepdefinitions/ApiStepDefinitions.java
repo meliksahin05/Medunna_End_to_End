@@ -81,7 +81,7 @@ public class ApiStepDefinitions {
 
         //Sent Request
         response = given(spec).when().get("{first}/{second}/{third}");
-        response.prettyPrint();
+//        response.prettyPrint();
 
 
 
